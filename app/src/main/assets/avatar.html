@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  model-viewer { width: 100%; height: 100%; background: transparent; --poster-color: transparent; }
+</style>
+<script>
+  // Uses model-viewer.min.js from the app if you add it to assets/, otherwise loads it online.
+  function load(src) { const s = document.createElement('script'); s.type = 'module'; s.src = src; document.head.appendChild(s); return s; }
+  load('/assets/model-viewer.min.js').onerror = () =>
+    load('https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js');
+</script></head>
+<body>
+<model-viewer id="mv" field-of-view="30deg" interaction-prompt="none" shadow-intensity="0"
+              disable-zoom disable-pan></model-viewer>
+<script>
+  const mv = document.getElementById('mv');
+  mv.src = new URLSearchParams(location.search).get('m') || '/assets/models/chisa.glb';
+  let r = 2.5; const t0 = Date.now();
+  mv.addEventListener('load', () => {
+    // Frame head and shoulders (the model has no built-in animation, so we sway the camera gently).
+    const c = mv.getBoundingBoxCenter(), d = mv.getDimensions();
+    mv.cameraTarget = `${c.x}m ${c.y + d.y * 0.3}m ${c.z}m`;   // 0.3 = how high to aim; raise for a tighter face shot
+    r = d.y * 0.8;                                              // 0.8 = distance; smaller = closer
+    mv.cameraOrbit = `0deg 85deg ${r}m`; mv.jumpCameraToGoal();
+    setInterval(() => { mv.cameraOrbit = `${Math.sin((Date.now() - t0) / 1500) * 10}deg 85deg ${r}m`; }, 60);
+  });
+</script></body></html>
